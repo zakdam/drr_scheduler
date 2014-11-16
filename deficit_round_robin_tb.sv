@@ -5,7 +5,7 @@ module deficit_round_robin_tb;
 
 // input ports
   logic                        clk;
-  logic                        arst;
+  logic                        rst;
   logic                        ready;
 
 initial
@@ -19,10 +19,11 @@ initial
 
 initial
   begin
-    arst = 1'b1;
+    rst = 1'b0;
     @( posedge clk );
+    rst = 1'b1;
     @( posedge clk );
-    arst <= 1'b0;
+    rst <= 1'b0;
   end
 
 initial
@@ -33,28 +34,31 @@ initial
     ready <= 1'b1;
   end
 
-// some transit logic
-  logic [$clog2(PKT_QS_CNT)-1:0] addr_tr;
-  logic                          val_tr;
-  logic [PKT_QS_CNT-1:0][15:0]   size_tr;
+// transit wires
+  wire [$clog2(PKT_QS_CNT)-1:0] addr_w;
+  wire                          val_w;
+  wire [PKT_QS_CNT-1:0][15:0]   size_w;
+  wire [PKT_QS_CNT-1:0]         size_val_w;
 
-deficit_round_robin drr(
-  .clk_i      ( clk      ),
-  .arst_i     ( arst     ),
-  .size_i     ( size_tr  ),
-  .ready_i    ( ready    ),
+deficit_round_robin drb(
+  .clk_i      ( clk        ),
+  .rst_i      ( rst        ),
+  .size_i     ( size_w     ),
+  .size_val_i ( size_val_w ),
+  .ready_i    ( ready      ),
 
-  .read_o     ( addr_tr  ),
-  .read_val_o ( val_tr   )
+  .read_o     ( addr_w     ),
+  .read_val_o ( val_w      )
 );
 
 drr_tester dt(
-  .arst_i     ( arst     ),
-  .cng_addr_i ( addr_tr  ),
-  .cng_val_i  ( val_tr   ),
-
-  .size_o     ( size_tr  )
-
+  .clk_i      ( clk        ),
+  .rst_i      ( rst        ),
+  .cng_addr_i ( addr_w     ),
+  .cng_val_i  ( val_w      ),
+ 
+  .size_o     ( size_w     ),
+  .size_val_o ( size_val_w )
 );
 
 endmodule
